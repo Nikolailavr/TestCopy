@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import json
 import os
 from pathlib import Path
@@ -27,17 +28,21 @@ def read_json(path: str) -> dict:
     :param path: Путь до файла
     :return: Словарь с данными из файла
     """
-    result = dict()
     try:
         with open(path, 'r', encoding='utf-8') as file:
-            result = json.load(file)
+            return json.load(file)
     except IsADirectoryError:
-        raise IsADirectoryError(f'[ERR] Необходим полный путь до файла')
+        logger.error(f'[ERR] Необходим полный путь до файла')
+        exit(0)
     except FileNotFoundError:
-        raise FileNotFoundError(f'[ERR] Файл не найден')
+        logger.error(f'[ERR] Файл не найден')
+        exit(0)
+    except json.decoder.JSONDecodeError:
+        logger.error(f'[ERR] Файл пустой или не json')
+        exit(0)
     except Exception as ex:
-        raise ex  # Для отладки
-    return result
+        logger.error(ex)
+        exit(0)
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,10 +52,12 @@ def parse_args() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser(
         prog='TestCopy',
-        description='Copy files to endpoints')
-    parser.add_argument('path')
+        description='Копирование файлов до конечных директорий')
+    parser.add_argument('path', help='Путь до файлов')
     parser.add_argument('-o', '--override', action='store_true', help='Разрешить перезапись файлов')
-    parser.add_argument('-d', '--dry', action='store_true', help='Запуск в "сухом режиме"')
+    parser.add_argument('-d', '--dry', action='store_true', help='Запуск в "сухом" режиме')
+    texttmp = '1 - Пробег по каждому файлу; 2 - Пробег по всем файлам а после уже копирование'
+    parser.add_argument('-m', '--method', action='store_true', help=texttmp)
     return parser.parse_args()
 
 
@@ -65,3 +72,13 @@ def get_file_name(path: str) -> str:
         return path[pos + 1:]
     else:
         return path
+
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start = datetime.datetime.now()
+        result = func(*args, **kwargs)
+        print(f'Время выполения программы {datetime.datetime.now() - start} сек')
+        return result
+    return wrapper
+
