@@ -79,7 +79,7 @@ def check_env():
     Checkin .env
     """
     if not all([consts.FTP_USER, consts.FTP_PASS, consts.OwnCloud_URL, consts.OwnCloud_Passwd]):
-        print('Set params in .env')
+        print('Заполните параметры в misc/.env')
         exit(0)
 
 
