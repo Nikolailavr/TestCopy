@@ -1,5 +1,5 @@
 from misc.consts import JSON_TO_COPY
-from misc.functions import parse_args, read_json, logger, timer
+from misc.functions import parse_args, read_json, logger, timer, check_env
 from services.ftp import FTPClient
 from services.local import copy_local
 from services.owncloud import OwnCLoudClient
@@ -65,6 +65,7 @@ def main_other():
 
 
 if __name__ == '__main__':
+    check_env()
     if args.method:
         main_other()
     else:

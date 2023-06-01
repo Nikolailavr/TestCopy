@@ -74,6 +74,15 @@ def get_file_name(path: str) -> str:
         return path
 
 
+def check_env():
+    """
+    Checkin .env
+    """
+    if not all([consts.FTP_USER, consts.FTP_PASS, consts.OwnCloud_URL, consts.OwnCloud_Passwd]):
+        print('Set params in .env')
+        exit(0)
+
+
 def timer(func):
     """
     Декоратор для посчета времени работы
