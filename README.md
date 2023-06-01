@@ -1,4 +1,5 @@
-#TestCopy
+##TestCopy
+
 Приложение для копирования файлов на различные ресурсы через ftp, owncloud или в локальную директорию.
 
 Для запуска понадобится Python v3.11
@@ -20,7 +21,6 @@ $ sh install.sh
 ```
 $ source venv/bin/activate
 $ python3 main.py data -o
-
 ```
 
 ## Помощь
@@ -28,6 +28,4 @@ $ python3 main.py data -o
 
 ```
 $ python3 main.py --help
-
 ```
-
