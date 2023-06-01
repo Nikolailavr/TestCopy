@@ -1,17 +1,20 @@
 import os
-from dotenv import load_env
+from dotenv import load_dotenv
 
-load_env('misc/.env')
 
+load_dotenv('misc/.env')
 
 # FTP
-FTP_HOST = 'ftp.automiq.ru'
-FTP_USER = os.getenv('FTP_USER')
-FTP_PASS = os.getenv('FTP_PASSWD')
+# FTP_HOST = 'ftp.automiq.ru'
+# FTP_USER = os.getenv('FTP_USER')
+# FTP_PASS = os.getenv('FTP_PASSWD')
+FTP_HOST = '172.16.120.155'
+FTP_USER = 'user'
+FTP_PASS = 'user123'
 
 # OwnCloud
-OC_URL = os.getenv('OWNCLOUD_URL')
-OC_PASS = os.getenv('OWNCLOUD_PASSWD')
+OwnCloud_URL = os.getenv('OWNCLOUD_URL')
+OwnCloud_Passwd = os.getenv('OWNCLOUD_PASSWD')
 
 # Local
 LOCAL = '/tmp/test-230531/'

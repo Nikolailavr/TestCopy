@@ -1,116 +1,81 @@
 import requests
-from requests.auth import HTTPBasicAuth
+import urllib3
 
-from services.consts import OC_URL, OC_PASS
+from misc.consts import OwnCloud_URL, OwnCloud_Passwd
 
 
-class Client:
+class OwnCLoudClient:
 
-    def __init__(self, url, **kwargs):
-        """Instantiates a client
-
-        :param url: URL of the target ownCloud instance
-        :param verify_certs: True (default) to verify SSL certificates, False otherwise
-        :param dav_endpoint_version: None (default) to force using a specific endpoint version
-        instead of relying on capabilities
-        :param debug: set to True to print debugging messages to stdout, defaults to False
+    def __init__(self):
         """
-        if not url.endswith('/'):
-            url += '/'
-
-        self.url = url
+        Instantiates a client
+        """
+        url = urllib3.util.parse_url(OwnCloud_URL)
+        self._url_osn = f'{url.scheme}://{url.host}/owncloud/'
+        self._url = OwnCloud_URL
         self._session = None
-        self._debug = kwargs.get('debug', False)
-        self._verify_certs = kwargs.get('verify_certs', True)
-        self._dav_endpoint_version = kwargs.get('dav_endpoint_version', True)
+        self._token = None
+        self._passwd = OwnCloud_Passwd
+        self._url_upload = self._url_osn + 'public.php/webdav/'
 
-        self._capabilities = None
-        self._version = None
-        self._davpath = None
-        self._webdav_url = None
-
-    def login(self, user_id, password):
-        """Authenticate to ownCloud.
-        This will create a session on the server.
-
-        :param user_id: user id
-        :param password: password
-        :raises: HTTPResponseError in case an HTTP error status was returned
-        """
-
-        self._session = requests.session()
-        self._session.verify = self._verify_certs
-        self._session.auth = (user_id, password)
-
+    def _connect(self) -> bool | None:
         try:
-            self._update_capabilities()
+            self._session = requests.session()
+            self._token = self._get_token()
+            print(self._token)
+            return self._anon_login()
+        except Exception as ex:
+            print(f'[ERR] {ex}')
+            raise ex
 
-            url_components = self.url
-            if self._dav_endpoint_version == 1:
-                self._davpath = url_components.path + 'remote.php/dav/files/' + parse.quote(user_id)
-                self._webdav_url = self.url + 'remote.php/dav/files/' + parse.quote(user_id)
-            else:
-                self._davpath = url_components.path + 'remote.php/webdav'
-                self._webdav_url = self.url + 'remote.php/webdav'
-
-        except Exception as e:
+    def _anon_login(self) -> bool | None:
+        # self._session.auth = (self._token, OwnCloud_Passwd)
+        payload = {
+            'password': OwnCloud_Passwd,
+            'requesttoken': self._token
+        }
+        try:
+            response = self._session.post(self._url + 'authenticate', data=payload)
+            print(response.text)
+        except Exception as ex:
             self._session.close()
-            self._session = None
-            raise e
+            print(f'[ERR] Неудачная попытка аутентификации')
+            print(f'[ERR] {ex}')
+        else:
+            if response.ok:
+                print(f'[INFO] Успешная авторизация')
+                return True
 
-    def logout(self) -> True:
-        """
-        Log out the authenticated user and close the session.
-        :returns: True if the operation succeeded
-        """
-        self._session.close()
-        return True
+    def copy(self, path: str):
+        try:
+            if self._connect():
+                with open(path, 'rb') as file:
+                    files = {'file': file}
+                    try:
+                        response = self._session.post(self._url_upload, files=files)
+                    except Exception as ex:
+                        raise ex
+                    else:
+                        if response.ok:
+                            print(f'[INFO] Файл {path} успешно загружен на сервер')
+            else:
+                print(f'[ERR] Неудачная попытка соединения')
+        except Exception as ex:
+            print(f'[ERR] {ex}')
+        finally:
+            self._session.close()
 
-    def anon_login(self, folder_token, folder_password=''):
-        self._session = requests.session()
-        self._session.verify = self._verify_certs
-        self._session.auth = (folder_token, folder_password)
-        self._davpath = self.url + 'public.php/webdav'
-        self._webdav_url = self.url + 'public.php/webdav'
-
-    def _update_capabilities(self):
-        res = self._make_ocs_request(
-            'GET',
-            self.OCS_SERVICE_CLOUD,
-            'capabilities'
-        )
-        if res.status_code == 200:
-            tree = ET.fromstring(res.content)
-            self._check_ocs_status(tree)
-
-            data_el = tree.find('data')
-            apps = {}
-            for app_el in data_el.find('capabilities'):
-                app_caps = {}
-                for cap_el in app_el:
-                    app_caps[cap_el.tag] = cap_el.text
-                apps[app_el.tag] = app_caps
-
-            self._capabilities = apps
-
-            version_el = data_el.find('version/string')
-            edition_el = data_el.find('version/edition')
-            self._version = version_el.text
-            if edition_el.text is not None:
-                self._version += '-' + edition_el.text
-
-            if 'dav' in apps and 'chunking' in apps['dav']:
-                chunking_version = float(apps['dav']['chunking'])
-                if self._dav_endpoint_version > chunking_version:
-                    self._dav_endpoint_version = None
-
-                if self._dav_endpoint_version is None and chunking_version >= 1.0:
-                    self._dav_endpoint_version = 1
-                else:
-                    self._dav_endpoint_version = 0
-
-            return self._capabilities
-
+    def _get_token(self) -> str:
+        try:
+            response = self._session.get(self._url)
+            find_text = 'data-requesttoken='
+            pos_1 = response.text.find(find_text)
+            pos_1 = response.text.find('"', pos_1) + 1
+            pos_2 = response.text.find('"', pos_1)
+            return response.text[pos_1:pos_2].replace(find_text, '')
+        except Exception as ex:
+            print(f'[ERR] {ex}')
+            raise ex
 
 
 def copy_owncloud(path: str) -> None:
@@ -118,25 +83,25 @@ def copy_owncloud(path: str) -> None:
         try:
             files = {'file': file}
             with requests.Session() as session:
-                first_resp = session.get(OC_URL)
+                first_resp = session.get(OwnCloud_URL)
                 find_text = 'data-requesttoken='
                 pos_1 = first_resp.text.find(find_text)
                 pos_1 = first_resp.text.find('"', pos_1) + 1
                 pos_2 = first_resp.text.find('"', pos_1)
                 request_token = first_resp.text[pos_1:pos_2].replace(find_text, '')
                 payload = {
-                    'password': OC_PASS,
+                    'password': OwnCloud_Passwd,
                     'requesttoken': request_token
                 }
-                upload = session.post(f'{OC_URL}/authenticate', data=payload, files=files)
+                upload = session.post(f'{OwnCloud_URL}/authenticate', data=payload, files=files)
                 # upload = session.put(OC_URL, files=files)
         except ConnectionError:
-            print(f'[ERR] Не удалось соединиться с сервером {OC_URL}')
+            print(f'[ERR] Не удалось соединиться с сервером {OwnCloud_URL}')
         except Exception as ex:
             raise ex
         else:
             print(upload.status_code)
             if upload.ok:
-                print(f'[INFO] Файл {path} успешно скопирован на сервер {OC_URL}')
+                print(f'[INFO] Файл {path} успешно скопирован на сервер {OwnCloud_URL}')
             else:
-                print(f'[ERR] Не удалось отправить файл на сервер {OC_URL} (status code={upload.status_code})')
+                print(f'[ERR] Не удалось отправить файл на сервер {OwnCloud_URL} (status code={upload.status_code})')

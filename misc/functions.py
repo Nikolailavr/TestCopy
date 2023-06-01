@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import json
 
-import services.consts as consts
+import misc.consts as consts
 
 path_parent = Path(__file__).parent.parent
 
@@ -22,9 +22,9 @@ def read_json(path: str) -> dict:
         with open(path, 'r', encoding='utf-8') as file:
             result = json.load(file)
     except IsADirectoryError:
-        raise IsADirectoryError('Необходим полный путь до файла')
+        raise IsADirectoryError(f'[ERR] Необходим полный путь до файла')
     except FileNotFoundError:
-        raise FileNotFoundError('Файл не найден')
+        raise FileNotFoundError(f'[ERR] Файл не найден')
     except Exception as ex:
         raise ex               # Для отладки
     return result
