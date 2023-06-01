@@ -38,7 +38,7 @@ class FTPClient:
             if self._connect():
                 file_exists = self._exists_file(self._filename)
                 if not file_exists or args.override:
-                    logger.info(f'Выполняю копирование файла {self._filename} по ftp')
+                    logger.info(f'Выполняю копирование файла {self._filename} на {FTP_HOST}')
                     try:
                         with open(path, 'rb') as file:
                             result = self._session.storbinary(f'STOR {self._filename}', file)
