@@ -1,4 +1,4 @@
-from misc.consts import LOCAL, JSON_TO_COPY
+from misc.consts import JSON_TO_COPY
 from misc.functions import parse_args, read_json, logger
 from services.ftp import FTPClient
 from services.local import copy_local
@@ -11,22 +11,19 @@ def main(args):
     owncloud = OwnCLoudClient()
     logger.info('Старт работы приложения')
     count_files = len(data['files'])
+    if args.dry:
+        logger.warning('Сухой режим работы')
     for num, item in enumerate(data['files'], 1):
         path_file = f'{args.path}/{item["name"]}'
         logger.info(f'Работа с файлом {path_file} ({num}/{count_files})')
         for way in item['endpoints']:
             match way:
                 case 'ftp':
-                    ftp.copy(path=path_file, override=args.override)
+                    ftp.copy(path=path_file, args=args)
                 case 'owncloud':
-                    owncloud.copy(local_source_file=path_file, override=args.override)
+                    owncloud.copy(path=path_file, args=args)
                 case 'folder':
-                    dest = LOCAL + '/' if not LOCAL.endswith('/') else LOCAL
-                    copy_local(
-                        src=path_file,
-                        dest=f'{dest}{item["name"]}',
-                        override=args.override
-                    )
+                    copy_local(path=path_file, args=args)
                 case _:
                     logger.warning(f'Неверное указание способа копирования файла {path_file} ({way})')
     logger.info(f'Работа приложения завершена')

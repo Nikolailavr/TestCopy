@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 from six.moves.urllib import parse
 
 from misc.consts import OwnCloud_URL, OwnCloud_Passwd
-from misc.functions import logger
+from misc.functions import logger, get_file_name
 
 
 class ResponseError(Exception):
@@ -128,22 +128,26 @@ class OwnCLoudClient:
         self._session.verify = True
         self._session.auth = (self._token, OwnCloud_Passwd)
 
-    def copy(self, local_source_file: str, override: bool = False, **kwargs):
-        self._connect()
-        remote_path = self._get_file_name(local_source_file)
-        files = self._list(remote_path)
-        filenames = []
-        for file in files:
-            filenames.append(file.name)
-        file_exists = self._get_file_name(local_source_file) in filenames
-        if not file_exists or override:
-            if self._put_file(remote_path, local_source_file, **kwargs):
-                logger.info(f'Файл {remote_path} успешно загружен на сервер')
-            else:
-                logger.error(f"Не удалось загрузить файл")
-            self._session.close()
-        elif file_exists and not override:
-            logger.info(f'Файл не скопирован, т.к. отключена перезапись')
+    def copy(self, path: str, args, **kwargs):
+        remote_path = get_file_name(path)
+        if args.dry:
+            logger.info(f'Здесь могло быть копирование файла {remote_path} на сервер {self._url_osn}')
+        else:
+            self._connect()
+            files = self._list(remote_path)
+            filenames = []
+            for file in files:
+                filenames.append(file.name)
+            file_exists = get_file_name(path) in filenames
+            if not file_exists or args.override:
+                logger.info(f'Выполняется копирование файла {remote_path} на сервер {self._url_osn}')
+                if self._put_file(remote_path, path, **kwargs):
+                    logger.info(f'Файл {remote_path} успешно загружен на сервер')
+                else:
+                    logger.error(f"Не удалось загрузить файл")
+                self._session.close()
+            elif file_exists and not args.override:
+                logger.info(f'Файл не скопирован, т.к. отключена перезапись')
 
     def _list(self, path, depth=1, properties=None) -> list | None:
         """Returns the listing/contents of the given remote directory
@@ -256,7 +260,7 @@ class OwnCLoudClient:
         contains it, or True if the operation succeded, False
         if it didn't
         """
-        filename = self._get_file_name(path)
+        filename = get_file_name(path)
         res = self._session.request(
             method,
             self._url_upload + filename,
@@ -326,15 +330,3 @@ class OwnCLoudClient:
         if not path.startswith('/'):
             path = '/' + path
         return path
-
-    @staticmethod
-    def _get_file_name(path: str) -> str:
-        """
-        Получаем имя файла из полного пути
-        :param path: Путь до файла
-        """
-        pos = path.rfind('/')
-        if pos != -1:
-            return path[pos + 1:]
-        else:
-            return path

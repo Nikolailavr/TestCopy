@@ -52,3 +52,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('-o', '--override', action='store_true', help='Разрешить перезапись файлов')
     parser.add_argument('-d', '--dry', action='store_true', help='Запуск в "сухом режиме"')
     return parser.parse_args()
+
+
+def get_file_name(path: str) -> str:
+    """
+    Получаем имя файла из полного пути
+    :param path: Путь до файла
+    :return Имя файла
+    """
+    pos = path.rfind('/')
+    if pos != -1:
+        return path[pos + 1:]
+    else:
+        return path
