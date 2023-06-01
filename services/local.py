@@ -1,7 +1,7 @@
 import os.path
 import shutil
 
-from misc.consts import LOCAL
+from misc.functions import logger
 
 
 def copy_local(src: str, dest: str, override: bool = False) -> None:
@@ -12,15 +12,16 @@ def copy_local(src: str, dest: str, override: bool = False) -> None:
     :param override: Разрешение на перезапись файла
     :return:
     """
-    if not os.path.exists(dest) or override:
-        print(f'[INFO] Выполняется копирование файла в локальную директорию: {LOCAL}...')
+    file_exists = os.path.exists(dest)
+    if not file_exists or override:
+        logger.info(f'Выполняется копирование файла {src} в {dest}')
         try:
             shutil.copy2(src, dest)
         except FileNotFoundError:
-            print(f'[ERR] Файл не найден {src}')
+            logger.error(f'Файл не найден {src}')
         except IsADirectoryError:
-            print(f'[ERR] Каталог не найден {dest}')
+            logger.error(f'Каталог не найден {dest}')
         else:
-            print(f'[INFO] Файл {src} успешно скопирован в {dest}')
-    elif os.path.exists(src) and not override:
-        print(f'[INFO] Файл не скопирован, т.к. отключена перезапись')
+            logger.info(f'Файл {src} успешно скопирован в {dest}')
+    elif file_exists and not override:
+        logger.info(f'Файл не скопирован, т.к. отключена перезапись')

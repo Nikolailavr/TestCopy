@@ -2,15 +2,15 @@
   "files": [
     {
       "name": "file1.txt",
-      "endpoints": ["folder"]
+      "endpoints": ["ftp", "folder"]
     },
     {
       "name": "file2.txt",
-      "endpoints": ["owncloud"]
+      "endpoints": ["owncloud", "ftp"]
     },
     {
       "name": "file3.txt",
-      "endpoints": ["ftp"]
+      "endpoints": ["folder", "owncloud", "ftp"]
     }
   ]
 }

@@ -17,7 +17,7 @@ OwnCloud_URL = os.getenv('OWNCLOUD_URL')
 OwnCloud_Passwd = os.getenv('OWNCLOUD_PASSWD')
 
 # Local
-LOCAL = '/tmp/test-230531/'
+LOCAL = '/tmp/test-230531'
 
 # json
 JSON_TO_COPY = 'data.json'

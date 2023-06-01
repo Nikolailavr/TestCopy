@@ -1,11 +1,21 @@
 import argparse
+import json
 import os
 from pathlib import Path
-import json
+from loguru import logger
 
 import misc.consts as consts
 
 path_parent = Path(__file__).parent.parent
+
+logger.add(
+    Path().joinpath(f"{path_parent}/logs/log.json"),
+    format="{time} | {level} | {message}",
+    level="INFO",
+    serialize=True,
+    rotation="1 day",
+    compression="zip"
+)
 
 if not os.path.exists(consts.LOCAL):
     os.mkdir(consts.LOCAL)
@@ -26,7 +36,7 @@ def read_json(path: str) -> dict:
     except FileNotFoundError:
         raise FileNotFoundError(f'[ERR] Файл не найден')
     except Exception as ex:
-        raise ex               # Для отладки
+        raise ex  # Для отладки
     return result
 
 
@@ -36,8 +46,8 @@ def parse_args() -> argparse.Namespace:
     :return: простое строковое представление
     """
     parser = argparse.ArgumentParser(
-                        prog='TestCopy',
-                        description='Copy files to endpoints')
+        prog='TestCopy',
+        description='Copy files to endpoints')
     parser.add_argument('path')
     parser.add_argument('-o', '--override', action='store_true', help='Разрешить перезапись файлов')
     parser.add_argument('-d', '--dry', action='store_true', help='Запуск в "сухом режиме"')
