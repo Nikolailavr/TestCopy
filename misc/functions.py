@@ -75,6 +75,11 @@ def get_file_name(path: str) -> str:
 
 
 def timer(func):
+    """
+    Декоратор для посчета времени работы
+    :param func:
+    :return:
+    """
     def wrapper(*args, **kwargs):
         start = datetime.datetime.now()
         result = func(*args, **kwargs)

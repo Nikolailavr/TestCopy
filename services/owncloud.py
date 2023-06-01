@@ -112,9 +112,6 @@ class FileInfo(object):
 
 class OwnCLoudClient:
     def __init__(self):
-        """
-        Instantiates a client
-        """
         url = urllib3.util.parse_url(OwnCloud_URL)
         self._url_osn = f'{url.scheme}://{url.host}/owncloud/'
         self._url = OwnCloud_URL
@@ -124,11 +121,19 @@ class OwnCLoudClient:
         self._url_upload = self._url_osn + 'public.php/webdav/'
 
     def _connect(self) -> None:
+        """Создание подключения и авторизация"""
         self._session = requests.session()
         self._session.verify = True
         self._session.auth = (self._token, OwnCloud_Passwd)
 
     def copy(self, path: str, args, **kwargs):
+        """
+        Копирование файлов на сервер
+        :param path: путь до файла
+        :param args: аргументы запуска
+        :param kwargs: optional arguments
+        :return:
+        """
         remote_path = get_file_name(path)
         if args.dry:
             logger.info(f'Здесь могло быть копирование файла {remote_path} на сервер {self._url_osn}')
