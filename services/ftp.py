@@ -21,6 +21,9 @@ class FTPClient:
         except ConnectionError:
             self._session.close()
             logger.error(f'Нет соединения с сервером {FTP_HOST}')
+        except Exception as ex:
+            logger.error(ex)    # Для отладки
+            exit(0)
         else:
             return True
 
@@ -48,6 +51,8 @@ class FTPClient:
                         logger.error(f'Соединение разорвано')
                     except Exception as ex:
                         logger.error('Не удалось отправить файл :(')
+                        logger.error(ex)
+                        exit(0)
                         # raise ex  # Для отладки
                     else:
                         if result.startswith('226'):
