@@ -1,0 +1,8 @@
+__pycache__/
+.idea
+/.idea
+/logs
+/venv
+data_tmp.json
+
+

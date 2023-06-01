@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "name": "file1.txt",
+      "endpoints": ["folder"]
+    },
+    {
+      "name": "file2.txt",
+      "endpoints": ["owncloud"]
+    },
+    {
+      "name": "file3.txt",
+      "endpoints": ["ftp"]
+    }
+  ]
+}
