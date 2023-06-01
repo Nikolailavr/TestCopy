@@ -33,7 +33,7 @@ class FTPClient:
         """
         self._filename = get_file_name(path)
         if args.dry:
-            logger.info(f'Здесь могло быть копирование файла {self._filename} по ftp')
+            logger.info(f'Здесь могло быть копирование файла {self._filename} на {FTP_HOST}')
         else:
             if self._connect():
                 file_exists = self._exists_file(self._filename)
