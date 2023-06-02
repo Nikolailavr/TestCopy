@@ -35,34 +35,33 @@ class FTPClient:
         :return:
         """
         self._filename = get_file_name(path)
-        if args.dry:
-            logger.info(f'Здесь могло быть копирование файла {self._filename} на {FTP_HOST}')
-        else:
-            if self._connect():
-                file_exists = self._exists_file(self._filename)
-                if not file_exists or args.override:
-                    logger.info(f'Выполняю копирование файла {self._filename} на {FTP_HOST}')
-                    try:
-                        with open(path, 'rb') as file:
-                            result = self._session.storbinary(f'STOR {self._filename}', file)
-                    except FileNotFoundError:
-                        logger.error(f'Файл {self._filename} не найден')
-                    except ConnectionRefusedError:
-                        logger.error(f'Соединение разорвано')
-                    except Exception as ex:
-                        logger.error('Не удалось отправить файл :(')
-                        logger.error(ex)
-                        exit(0)
-                        # raise ex  # Для отладки
+        if self._connect():
+            file_exists = self._exists_file(self._filename)
+            if (not file_exists or args.override) and not args.dry:
+                logger.info(f'Выполняю копирование файла {self._filename} на {FTP_HOST}')
+                try:
+                    with open(path, 'rb') as file:
+                        result = self._session.storbinary(f'STOR {self._filename}', file)
+                except FileNotFoundError:
+                    logger.error(f'Файл {self._filename} не найден')
+                except ConnectionRefusedError:
+                    logger.error(f'Соединение разорвано')
+                except Exception as ex:
+                    logger.error('Не удалось отправить файл :(')
+                    logger.error(ex)
+                    exit(0)
+                    # raise ex  # Для отладки
+                else:
+                    if result.startswith('226'):
+                        logger.info(f'Файл {self._filename} успешно скопирован на {FTP_HOST}')
                     else:
-                        if result.startswith('226'):
-                            logger.info(f'Файл {self._filename} успешно скопирован на {FTP_HOST}')
-                        else:
-                            logger.warning(f'Возможно файл не скопирован. Ответ от сервера: {result}')
-                    finally:
-                        self._session.close()
-                elif file_exists and not args.override:
-                    logger.info(f'Файл не скопирован, т.к. отключена перезапись')
+                        logger.warning(f'Возможно файл не скопирован. Ответ от сервера: {result}')
+                finally:
+                    self._session.close()
+            elif file_exists and not args.override:
+                logger.info(f'Файл не скопирован, т.к. отключена перезапись')
+            elif args.dry:
+                logger.info(f'Здесь могло быть копирование файла {self._filename} на {FTP_HOST}')
 
     def _exists_file(self, filename: str) -> bool | None:
         """
