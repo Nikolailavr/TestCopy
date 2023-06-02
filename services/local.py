@@ -26,7 +26,7 @@ def copy_local(path: str, args) -> None:
             logger.error(f'Каталог не найден {dest}')
         else:
             logger.info(f'Файл {path} успешно скопирован в {dest}')
-    elif file_exists and not args.override:
-        logger.info(f'Файл не скопирован, т.к. отключена перезапись')
     elif args.dry:
         logger.info(f'Здесь могло быть копирование файла {path} в {dest}')
+    elif file_exists and not args.override:
+        logger.info(f'Файл не скопирован, т.к. отключена перезапись')

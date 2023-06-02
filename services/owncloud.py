@@ -148,10 +148,10 @@ class OwnCLoudClient:
             else:
                 logger.error(f"Не удалось загрузить файл")
             self._session.close()
-        elif file_exists and not args.override:
-            logger.info(f'Файл не скопирован, т.к. отключена перезапись')
         elif args.dry:
             logger.info(f'Здесь могло быть копирование файла {remote_path} на сервер {self._url_osn}')
+        elif file_exists and not args.override:
+            logger.info(f'Файл не скопирован, т.к. отключена перезапись')
 
     def _list(self, path, depth=1, properties=None) -> list | None:
         """Returns the listing/contents of the given remote directory

@@ -58,10 +58,10 @@ class FTPClient:
                         logger.warning(f'Возможно файл не скопирован. Ответ от сервера: {result}')
                 finally:
                     self._session.close()
-            elif file_exists and not args.override:
-                logger.info(f'Файл не скопирован, т.к. отключена перезапись')
             elif args.dry:
                 logger.info(f'Здесь могло быть копирование файла {self._filename} на {FTP_HOST}')
+            elif file_exists and not args.override:
+                logger.info(f'Файл не скопирован, т.к. отключена перезапись')
 
     def _exists_file(self, filename: str) -> bool | None:
         """
