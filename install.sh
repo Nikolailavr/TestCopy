@@ -3,7 +3,8 @@
 rm -rf venv
 python3 -m venv venv
 source venv/bin/activate
-sh .pip.install
+pip install --upgrade pip
+pip install -r requirements.txt
 deactivate
 
 if [ -e misc/.env ]; then
