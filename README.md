@@ -8,7 +8,7 @@
 <!-- termynal -->
 
 ```
-git copy git@github.com:Nikolailavr/TestCopy.git
+git clone https://github.com/Nikolailavr/TestCopy.git
 cd TestCopy
 sh install.sh
 ```
