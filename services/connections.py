@@ -59,7 +59,7 @@ class ConnectionOwnCloud(Connection):
         self.session.logout()
 
 
-def create_connect(name: str, *args, **kwargs) -> Connection | None:
+def create_connection(name: str, *args, **kwargs) -> Connection | None:
     match name:
         case 'ftp':
             return ConnectionFTP(name, *args, **kwargs)

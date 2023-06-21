@@ -5,10 +5,10 @@ from argparse import Namespace
 
 from misc.consts import LOCAL
 from misc.functions import logger, get_file_name
-from services.connections import create_connect
+from services.connections import create_connection
 
 
-class Deliver(ABC):
+class Delivery(ABC):
     def __init__(self, name: str, **kwargs: dict):
         self._args = kwargs.get('args', Namespace(dry=False, override=False))
         self.paths = kwargs.get('paths', [])
@@ -20,15 +20,15 @@ class Deliver(ABC):
 
     def start_copy(self):
         if len(self.paths):
-            self._connection = create_connect(self._name)
+            self._connection = create_connection(self._name)
             for path in self.paths:
-                self.copy(path)
+                self._copy(path)
             if self._connection:
                 self._connection.close()
 
-    def copy(self, path: str):
+    def _copy(self, path: str):
         self._filename = get_file_name(path)
-        self._file_exist = self.exist_file()
+        self._file_exist = self._exist_file()
         if self._args.dry:
             logger.info(f'[{self._name}] Здесь могло быть копирование файла '
                         f'{self._filename}')
@@ -37,7 +37,7 @@ class Deliver(ABC):
             try:
                 logger.info(f'[{self._name}] Выполняется копирование '
                             f'{self._filename}')
-                result = self.send_file(path)
+                result = self._send_file(path)
             except FileNotFoundError:
                 logger.error(f'[{self._name}] Файл не найден {path}')
             except IsADirectoryError:
@@ -53,19 +53,19 @@ class Deliver(ABC):
                         f'перезапись')
 
     @abstractmethod
-    def exist_file(self):
+    def _exist_file(self):
         ...
 
     @abstractmethod
-    def send_file(self, path: str):
+    def _send_file(self, path: str):
         ...
 
 
-class DeliverFTP(Deliver):
+class DeliveryFTP(Delivery):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def exist_file(self) -> bool | None:
+    def _exist_file(self) -> bool | None:
         """
         Проверка на наличие файла на сервере
         """
@@ -79,7 +79,7 @@ class DeliverFTP(Deliver):
                 if self._filename in file:
                     return True
 
-    def send_file(self, path: str) -> bool | None:
+    def _send_file(self, path: str) -> bool | None:
         """
         Копирование файла на сервер через ftp
         """
@@ -95,30 +95,30 @@ class DeliverFTP(Deliver):
                            f'{result}')
 
 
-class DeliverOwncloud(Deliver):
+class DeliveryOwncloud(Delivery):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def exist_file(self) -> bool | None:
+    def _exist_file(self) -> bool | None:
         for file in self._connection.session.list(path=''):
             if self._filename == file.name:
                 return True
 
-    def send_file(self, path: str):
+    def _send_file(self, path: str):
         self._connection.session.put_file(self._filename, path)
         return True
 
 
-class DeliverFolder(Deliver):
+class DeliveryFolder(Delivery):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def exist_file(self) -> bool | None:
+    def _exist_file(self) -> bool | None:
         self._destination = LOCAL + '/' if not LOCAL.endswith('/') else LOCAL
         self._destination += self._filename
         return os.path.exists(self._destination)
 
-    def send_file(self, path: str) -> bool | None:
+    def _send_file(self, path: str) -> bool | None:
         shutil.copy2(path, self._destination)
         return True
 
@@ -126,8 +126,8 @@ class DeliverFolder(Deliver):
 def start_delivery(method: str, kwargs: dict):
     match method:
         case "ftp":
-            DeliverFTP(method, **kwargs).start_copy()
+            DeliveryFTP(method, **kwargs).start_copy()
         case "owncloud":
-            DeliverOwncloud(method, **kwargs).start_copy()
+            DeliveryOwncloud(method, **kwargs).start_copy()
         case "folder":
-            DeliverFolder(method, **kwargs).start_copy()
+            DeliveryFolder(method, **kwargs).start_copy()

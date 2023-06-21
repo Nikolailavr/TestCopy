@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 from misc.consts import JSON_TO_COPY
 from misc.functions import parse_args, read_json, logger, check_env
-from services.delivers import start_delivery
+from services.deliveries import start_delivery
 
 args = parse_args()
 
@@ -20,7 +20,6 @@ def main():
             logger.warning('Сухой режим работы')
         for item in data['files']:
             path_file = f'{args.path}/{item["name"]}'
-            # path_file = f'data/{item["name"]}'
             for way in item['endpoints']:
                 filenames[way].append(path_file)
         for method in filenames:
