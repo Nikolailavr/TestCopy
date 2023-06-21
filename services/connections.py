@@ -8,6 +8,7 @@ from misc.functions import logger
 
 
 class Connection(ABC):
+    """Создание подключения"""
     def __init__(self, name: str, **kwargs):
         self.session = None
         try:
@@ -34,7 +35,6 @@ class ConnectionFTP(Connection):
     def _connect(self):
         """
         Создание подключения по FTP
-        :return: True при успешном соединении
         """
         self.session = FTP()
         self.session.connect(FTP_HOST)
@@ -60,6 +60,7 @@ class ConnectionOwnCloud(Connection):
 
 
 def create_connection(name: str, *args, **kwargs) -> Connection | None:
+    """Выбор соединения"""
     match name:
         case 'ftp':
             return ConnectionFTP(name, *args, **kwargs)

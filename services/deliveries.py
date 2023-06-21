@@ -9,16 +9,16 @@ from services.connections import create_connection
 
 
 class Delivery(ABC):
+    """Метод доставки"""
     def __init__(self, name: str, **kwargs: dict):
         self._args = kwargs.get('args', Namespace(dry=False, override=False))
         self.paths = kwargs.get('paths', [])
         self._name = name
         self._filename = None
-        self._file_exist = None
-        self._destination = None
         self._connection = None
 
     def start_copy(self):
+        """Старт копирования файлов"""
         if len(self.paths):
             self._connection = create_connection(self._name)
             for path in self.paths:
@@ -27,12 +27,13 @@ class Delivery(ABC):
                 self._connection.close()
 
     def _copy(self, path: str):
+        """Копирование файла"""
         self._filename = get_file_name(path)
-        self._file_exist = self._exist_file()
+        file_exist = self._exist_file()
         if self._args.dry:
             logger.info(f'[{self._name}] Здесь могло быть копирование файла '
                         f'{self._filename}')
-        elif (not self._file_exist or self._args.override) and \
+        elif (not file_exist or self._args.override) and \
                 not self._args.dry:
             try:
                 logger.info(f'[{self._name}] Выполняется копирование '
@@ -48,20 +49,23 @@ class Delivery(ABC):
                                 f'скопирован')
                 else:
                     logger.warning(f'[{self._name}] Возникли неполадки')
-        elif self._file_exist and not self._args.override:
+        elif file_exist and not self._args.override:
             logger.info(f'[{self._name}] Файл не скопирован, т.к. отключена '
                         f'перезапись')
 
     @abstractmethod
     def _exist_file(self):
+        """Флаг существования файла"""
         ...
 
     @abstractmethod
     def _send_file(self, path: str):
+        """Отправка файла"""
         ...
 
 
 class DeliveryFTP(Delivery):
+    """Доставка по FTP"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -96,6 +100,7 @@ class DeliveryFTP(Delivery):
 
 
 class DeliveryOwncloud(Delivery):
+    """Доставка через OwnCloud"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -110,8 +115,10 @@ class DeliveryOwncloud(Delivery):
 
 
 class DeliveryFolder(Delivery):
+    """Локальный метод доставки"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._destination = None
 
     def _exist_file(self) -> bool | None:
         self._destination = LOCAL + '/' if not LOCAL.endswith('/') else LOCAL
@@ -124,6 +131,7 @@ class DeliveryFolder(Delivery):
 
 
 def start_delivery(method: str, kwargs: dict):
+    """Выбор метода доставки"""
     match method:
         case "ftp":
             DeliveryFTP(method, **kwargs).start_copy()
