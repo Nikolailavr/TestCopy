@@ -4,5 +4,5 @@ __pycache__/
 /logs
 /venv
 data_tmp.json
-
+.pytest_cache
 
