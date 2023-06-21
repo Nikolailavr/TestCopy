@@ -86,19 +86,3 @@ def check_env():
                 consts.OwnCloud_Passwd]):
         print('Заполните параметры в misc/.env')
         exit(0)
-
-
-def timer(func):
-    """
-    Декоратор для посчета времени работы
-    :param func:
-    :return:
-    """
-
-    def wrapper(*args, **kwargs):
-        start = datetime.datetime.now()
-        result = func(*args, **kwargs)
-        print(f'Время выполения программы {datetime.datetime.now() - start} с')
-        return result
-
-    return wrapper

@@ -105,7 +105,7 @@ class DeliverOwncloud(Deliver):
                 return True
 
     def send_file(self, path: str):
-        self._connection.session.copy(path, self._filename)
+        self._connection.session.put_file(self._filename, path)
         return True
 
 
