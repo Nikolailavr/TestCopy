@@ -3,6 +3,7 @@ import datetime
 import json
 import os
 from pathlib import Path
+
 from loguru import logger
 
 import misc.consts as consts
@@ -54,10 +55,11 @@ def parse_args() -> argparse.Namespace:
         prog='TestCopy',
         description='Копирование файлов до конечных директорий')
     parser.add_argument('path', help='Путь до файлов')
-    parser.add_argument('-o', '--override', action='store_true', help='Разрешить перезапись файлов')
-    parser.add_argument('-d', '--dry', action='store_true', help='Запуск в "сухом" режиме')
-    texttmp = '1 - Пробег по каждому файлу; 2 - Пробег по всем файлам а после уже копирование'
-    parser.add_argument('-m', '--method', action='store_true', help=texttmp)
+    parser.add_argument('-o', '--override',
+                        action='store_true',
+                        help='Разрешить перезапись файлов')
+    parser.add_argument('-d', '--dry', action='store_true',
+                        help='Запуск в "сухом" режиме')
     return parser.parse_args()
 
 
@@ -78,7 +80,10 @@ def check_env():
     """
     Checkin .env
     """
-    if not all([consts.FTP_USER, consts.FTP_PASS, consts.OwnCloud_URL, consts.OwnCloud_Passwd]):
+    if not all([consts.FTP_USER,
+                consts.FTP_PASS,
+                consts.OwnCloud_Token,
+                consts.OwnCloud_Passwd]):
         print('Заполните параметры в misc/.env')
         exit(0)
 
@@ -89,10 +94,11 @@ def timer(func):
     :param func:
     :return:
     """
+
     def wrapper(*args, **kwargs):
         start = datetime.datetime.now()
         result = func(*args, **kwargs)
-        print(f'Время выполения программы {datetime.datetime.now() - start} сек')
+        print(f'Время выполения программы {datetime.datetime.now() - start} с')
         return result
-    return wrapper
 
+    return wrapper

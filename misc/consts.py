@@ -10,7 +10,8 @@ FTP_USER = os.getenv('FTP_USER')
 FTP_PASS = os.getenv('FTP_PASSWD')
 
 # OwnCloud
-OwnCloud_URL = os.getenv('OWNCLOUD_URL')
+OwnCloud_URL = 'https://fs.automiq.ru/owncloud/'
+OwnCloud_Token = os.getenv('OWNCLOUD_TOKEN')
 OwnCloud_Passwd = os.getenv('OWNCLOUD_PASSWD')
 
 # Local
