@@ -1,36 +1,41 @@
 from multiprocessing import Pool
+from argparse import Namespace
+
 from misc.consts import JSON_TO_COPY
-from misc.functions import parse_args, read_json, logger, check_env
+from misc.functions import parse_args, logger, check_env, PrepareJSON
 from services.deliveries import start_delivery
 
 args = parse_args()
+files_prepare = PrepareJSON()
+
+
+class CopyFiles:
+    def __init__(
+            self,
+            args_: Namespace = Namespace(
+                dry=False, override=False, path='')
+    ):
+        self.args = args_
+
+    def start(self):
+        data = files_prepare.read_json(JSON_TO_COPY)
+        if data:
+            filenames = files_prepare.get_list_files(data, self.args)
+            methods = []
+            if self.args.dry:
+                logger.warning('Сухой режим работы')
+            for method in filenames.keys():
+                methods.append(
+                    [method, {'args': self.args, 'paths': filenames[method]}]
+                )
+            with Pool(processes=3) as pool:
+                pool.starmap(start_delivery, methods)
 
 
 def main():
     logger.info('--- Старт работы приложения ---')
-    data = read_json(JSON_TO_COPY)
-    if data:
-        filenames = get_list_files(data)
-        methods = []
-        if args.dry:
-            logger.warning('Сухой режим работы')
-        for method in filenames.keys():
-            methods.append(
-                [method, {'args': args, 'paths': filenames[method]}]
-            )
-        with Pool(processes=3) as pool:
-            pool.starmap(start_delivery, methods)
+    CopyFiles(args_=args).start()
     logger.info(f'--- Работа приложения завершена ---')
-
-
-def get_list_files(data) -> dict:
-    """Получение списка файлов для каждого метода доставки"""
-    filenames = {'ftp': [], 'owncloud': [], 'folder': []}
-    for item in data['files']:
-        path_file = f'{args.path}/{item["name"]}'
-        for way in item['endpoints']:
-            filenames[way].append(path_file)
-    return filenames
 
 
 if __name__ == '__main__':

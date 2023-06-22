@@ -119,6 +119,8 @@ class DeliveryFolder(Delivery):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._destination = None
+        if not os.path.exists(LOCAL):
+            os.mkdir(LOCAL)
 
     def _exist_file(self) -> bool | None:
         self._destination = LOCAL + '/' if not LOCAL.endswith('/') else LOCAL

@@ -1,9 +1,7 @@
 import argparse
-import datetime
+from argparse import Namespace
 import json
-import os
 from pathlib import Path
-
 from loguru import logger
 
 import misc.consts as consts
@@ -19,37 +17,45 @@ logger.add(
     compression="zip"
 )
 
-if not os.path.exists(consts.LOCAL):
-    os.mkdir(consts.LOCAL)
 
+class PrepareJSON:
+    @staticmethod
+    def read_json(path: str) -> dict:
+        """
+        Чтение данных из json файла
+        :param path: Путь до файла
+        :return: Словарь с данными из файла
+        """
+        try:
+            with open(path, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        except IsADirectoryError:
+            logger.error(f'[ERR] Необходим полный путь до файла')
+            exit(0)
+        except FileNotFoundError:
+            logger.error(f'[ERR] Файл не найден')
+            exit(0)
+        except json.decoder.JSONDecodeError:
+            logger.error(f'[ERR] Файл пустой или не json')
+            exit(0)
+        except Exception as ex:
+            logger.error(ex)
+            exit(0)
 
-def read_json(path: str) -> dict:
-    """
-    Чтение данных из json файла
-    :param path: Путь до файла
-    :return: Словарь с данными из файла
-    """
-    try:
-        with open(path, 'r', encoding='utf-8') as file:
-            return json.load(file)
-    except IsADirectoryError:
-        logger.error(f'[ERR] Необходим полный путь до файла')
-        exit(0)
-    except FileNotFoundError:
-        logger.error(f'[ERR] Файл не найден')
-        exit(0)
-    except json.decoder.JSONDecodeError:
-        logger.error(f'[ERR] Файл пустой или не json')
-        exit(0)
-    except Exception as ex:
-        logger.error(ex)
-        exit(0)
+    @staticmethod
+    def get_list_files(data, args: Namespace(path='')) -> dict:
+        """Получение списка файлов для каждого метода доставки"""
+        filenames = {'ftp': [], 'owncloud': [], 'folder': []}
+        for item in data['files']:
+            path_file = f'{args.path}/{item["name"]}'
+            for way in item['endpoints']:
+                filenames[way].append(path_file)
+        return filenames
 
 
 def parse_args() -> argparse.Namespace:
     """
     Получение атрибутов запуска
-    :return: простое строковое представление
     """
     parser = argparse.ArgumentParser(
         prog='TestCopy',
