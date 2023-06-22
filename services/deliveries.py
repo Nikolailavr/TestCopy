@@ -89,8 +89,7 @@ class DeliveryFTP(Delivery):
         """
         with open(path, 'rb') as file:
             result = self._connection.session.storbinary(
-                f'STOR {self._filename}',
-                file
+                f'STOR {self._filename}', file
             )
         if result.startswith('226'):
             return True
