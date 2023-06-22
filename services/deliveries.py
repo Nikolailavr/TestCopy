@@ -10,18 +10,19 @@ from services.connections import create_connection
 
 class Delivery(ABC):
     """Метод доставки"""
+
     def __init__(self, name: str, **kwargs: dict):
         self._args = kwargs.get('args', Namespace(dry=False, override=False))
-        self.paths = kwargs.get('paths', [])
+        self._paths = kwargs.get('paths', [])
         self._name = name
         self._filename = None
         self._connection = None
 
     def start_copy(self):
         """Старт копирования файлов"""
-        if len(self.paths):
+        if len(self._paths):
             self._connection = create_connection(self._name)
-            for path in self.paths:
+            for path in self._paths:
                 self._copy(path)
             if self._connection:
                 self._connection.close()
@@ -66,6 +67,7 @@ class Delivery(ABC):
 
 class DeliveryFTP(Delivery):
     """Доставка по FTP"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -100,6 +102,7 @@ class DeliveryFTP(Delivery):
 
 class DeliveryOwncloud(Delivery):
     """Доставка через OwnCloud"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -115,6 +118,7 @@ class DeliveryOwncloud(Delivery):
 
 class DeliveryFolder(Delivery):
     """Локальный метод доставки"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._destination = None
